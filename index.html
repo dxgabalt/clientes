@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Sistema de Gestión de Clientes</title>
+    <link rel="icon" href="logo.jpg">
+    <style>
+        /* Estilos CSS adicionales para las funciones de arrastrar y soltar */
+        .clientes ul {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .clientes li {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #FFC0CB; /* Color de fondo de clientes (rosado claro) */
+            border: 1px solid #FF69B4; /* Color del borde de clientes (rosado oscuro) */
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .clientes .cliente-imagen {
+            position: relative;
+        }
+
+        .clientes .cliente-imagen img {
+            max-width: 100px;
+            max-height: 100px;
+        }
+
+        .clientes .cliente-imagen .eliminar-imagen {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background-color: red;
+            color: #fff;
+            padding: 5px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        button {
+            background-color: #FF0000; /* Color de botones (rojo) */
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #CC0000; /* Color de botones al pasar el ratón (rojo más oscuro) */
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Mi Sistema de Gestión de Clientes</h1>
+    </header>
+    <main>
+        <div class="clientes">
+            <h2>Lista de Clientes</h2>
+            <input type="text" id="filtroNombre" placeholder="Filtrar por Nombre">
+            <input type="text" id="filtroProyecto" placeholder="Filtrar por Proyecto">
+            <select id="filtroCategoria" placeholder="Filtrar por Categoría">
+                <option value="">Todas las categorías</option>
+                <option value="Clinicas">Clínicas</option>
+                <option value="Sistemas">Sistemas</option>
+                <option value="Tiendas">Tiendas</option>
+                <option value="Otra">Otra</option>
+            </select>
+            <ul id="listaClientes" class="sortable"></ul>
+        </div>
+        <div class="agregar-cliente">
+            <h2>Agregar Cliente</h2>
+            <form id="formularioCliente">
+                <input type="text" id="nombreCliente" placeholder="Nombre del Cliente" required>
+                <input type="text" id="proyectoCliente" placeholder="Proyecto del Cliente" required>
+                <select id="categoriaCliente" placeholder="Categoría del Cliente">
+                    <option value="">Seleccionar Categoría</option>
+                    <option value="Clinicas">Clínicas</option>
+                    <option value="Sistemas">Sistemas</option>
+                    <option value="Tiendas">Tiendas</option>
+                    <option value="Otra">Otra</option>
+                </select>
+                <textarea id="comentariosCliente" placeholder="Comentarios y notas"></textarea>
+                <input type="number" id="rentaMensual" placeholder="Renta Mensual">
+                <input type="file" id="imagenCliente" accept="image/*" placeholder="Imagen de perfil del Cliente">
+                <button type="submit">Agregar</button>
+            </form>
+        </div>
+    </main>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const listaClientes = document.getElementById('listaClientes');
+            const filtroNombre = document.getElementById('filtroNombre');
+            const filtroProyecto = document.getElementById('filtroProyecto');
+            const filtroCategoria = document.getElementById('filtroCategoria');
+            const formularioCliente = document.getElementById('formularioCliente');
+            const clientes = obtenerClientes();
+
+            // Cargar clientes almacenados en localStorage al cargar la página
+            cargarClientes();
+
+            // Agregar un cliente
+            formularioCliente.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const nombreCliente = document.getElementById('nombreCliente').value;
+                const proyectoCliente = document.getElementById('proyectoCliente').value;
+                const categoriaCliente = document.getElementById('categoriaCliente').value;
+                const comentariosCliente = document.getElementById('comentariosCliente').value;
+                const rentaMensual = document.getElementById('rentaMensual').value;
+                const imagenCliente = document.getElementById('imagenCliente').files[0];
+
+                if (nombreCliente && proyectoCliente) {
+                    const cliente = {
+                        nombre: nombreCliente,
+                        proyecto: proyectoCliente,
+                        categoria: categoriaCliente,
+                        comentarios: comentariosCliente,
+                        renta: rentaMensual,
+                        imagen: imagenCliente ? URL.createObjectURL(imagenCliente) : ''
+                    };
+                    agregarCliente(cliente);
+                }
+            });
+
+            filtroNombre.addEventListener('input', filtrarClientes);
+            filtroProyecto.addEventListener('input', filtrarClientes);
+            filtroCategoria.addEventListener('change', filtrarClientes);
+
+            function cargarClientes(clientesFiltrados) {
+                listaClientes.innerHTML = '';
+                const clientesMostrar = clientesFiltrados || clientes;
+                clientesMostrar.forEach(function(cliente, index) {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <div class="cliente-imagen">
+                            <img src="${cliente.imagen || 'placeholder.png'}" alt="${cliente.nombre}">
+                            <div class="eliminar-imagen" data-index="${index}" title="Eliminar Imagen">X</div>
+                        </div>
+                        <div class="cliente-info">
+                            Cliente ${index + 1}:<br>
+                            <strong>${cliente.nombre}</strong><br>
+                            Proyecto: ${cliente.proyecto}<br>
+                            Categoría: ${cliente.categoria}<br>
+                            Comentarios: ${cliente.comentarios}<br>
+                            Renta Mensual: ${cliente.renta}<br>
+                            <button data-index="${index}" class="editar-cliente">Editar</button>
+                            <button data-index="${index}" class="eliminar-cliente">Eliminar</button>
+                        </div>
+                    `;
+                    listaClientes.appendChild(li);
+                });
+
+                // Inicializar la funcionalidad de arrastrar y soltar
+                const sortable = new Sortable(listaClientes, {
+                    animation: 150,
+                    onEnd: function (evt) {
+                        reordenarClientes(evt.oldIndex, evt.newIndex);
+                    }
+                });
+
+                // Agregar evento para editar cliente
+                const botonesEditar = document.querySelectorAll('.editar-cliente');
+                botonesEditar.forEach(function(boton) {
+                    boton.addEventListener('click', function(e) {
+                        const index = e.target.getAttribute('data-index');
+                        editarCliente(index);
+                    });
+                });
+
+                // Agregar evento para eliminar cliente
+                const botonesEliminar = document.querySelectorAll('.eliminar-cliente');
+                botonesEliminar.forEach(function(boton) {
+                    boton.addEventListener('click', function(e) {
+                        const index = e.target.getAttribute('data-index');
+                        eliminarCliente(index);
+                    });
+                });
+
+                // Agregar evento para eliminar imagen
+                const botonesEliminarImagen = document.querySelectorAll('.eliminar-imagen');
+                botonesEliminarImagen.forEach(function(boton) {
+                    boton.addEventListener('click', function(e) {
+                        const index = e.target.getAttribute('data-index');
+                        eliminarImagen(index);
+                    });
+                });
+            }
+
+            function obtenerClientes() {
+                return JSON.parse(localStorage.getItem('clientes')) || [];
+            }
+
+            function agregarCliente(cliente) {
+                clientes.push(cliente);
+                localStorage.setItem('clientes', JSON.stringify(clientes));
+                cargarClientes();
+            }
+
+            function editarCliente(index) {
+                const nuevoNombre = prompt('Editar nombre del cliente:', clientes[index].nombre);
+                const nuevoProyecto = prompt('Editar proyecto del cliente:', clientes[index].proyecto);
+                const nuevaRenta = prompt('Editar renta mensual:', clientes[index].renta);
+
+                if (nuevoNombre !== null && nuevoProyecto !== null) {
+                    clientes[index].nombre = nuevoNombre;
+                    clientes[index].proyecto = nuevoProyecto;
+                    clientes[index].renta = nuevaRenta;
+                    localStorage.setItem('clientes', JSON.stringify(clientes));
+                    cargarClientes();
+                }
+            }
+
+            function eliminarCliente(index) {
+                if (confirm('¿Estás seguro de que deseas eliminar a este cliente?')) {
+                    clientes.splice(index, 1);
+                    localStorage.setItem('clientes', JSON.stringify(clientes));
+                    cargarClientes();
+                }
+            }
+
+            function reordenarClientes(oldIndex, newIndex) {
+                const clienteMovido = clientes.splice(oldIndex, 1)[0];
+                clientes.splice(newIndex, 0, clienteMovido);
+                localStorage.setItem('clientes', JSON.stringify(clientes));
+                cargarClientes();
+            }
+
+            function filtrarClientes() {
+                const filtroNombreValor = filtroNombre.value.toLowerCase();
+                const filtroProyectoValor = filtroProyecto.value.toLowerCase();
+                const filtroCategoriaValor = filtroCategoria.value;
+                const clientesFiltrados = clientes.filter(cliente => {
+                    const nombre = cliente.nombre.toLowerCase();
+                    const proyecto = cliente.proyecto.toLowerCase();
+                    const categoria = cliente.categoria;
+                    return nombre.includes(filtroNombreValor) &&
+                        proyecto.includes(filtroProyectoValor) &&
+                        (filtroCategoriaValor === '' || categoria === filtroCategoriaValor);
+                });
+                cargarClientes(clientesFiltrados);
+            }
+
+            function eliminarImagen(index) {
+                if (confirm('¿Estás seguro de que deseas eliminar la imagen de perfil de este cliente?')) {
+                    clientes[index].imagen = '';
+                    localStorage.setItem('clientes', JSON.stringify(clientes));
+                    cargarClientes();
+                }
+            }
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+</body>
+</html>
