@@ -66,37 +66,47 @@
         <h1>Mi Sistema de Gestión de Clientes</h1>
     </header>
     <main>
-        <div class="clientes">
-            <h2>Lista de Clientes</h2>
-            <input type="text" id="filtroNombre" placeholder="Filtrar por Nombre">
-            <input type="text" id="filtroProyecto" placeholder="Filtrar por Proyecto">
-            <select id="filtroCategoria" placeholder="Filtrar por Categoría">
-                <option value="">Todas las categorías</option>
+      <div id="login" style="display: block;">
+        <h2>Iniciar Sesión</h2>
+        <input type="text" id="username" placeholder="Nombre de usuario" required>
+        <input type="password" id="password" placeholder="Contraseña" required>
+        <button id="loginButton">Iniciar Sesión</button>
+    </div>
+
+    <div id="app" style="display: none;">
+      <div class="clientes">
+        <h2>Lista de Clientes</h2>
+        <input type="text" id="filtroNombre" placeholder="Filtrar por Nombre">
+        <input type="text" id="filtroProyecto" placeholder="Filtrar por Proyecto">
+        <select id="filtroCategoria" placeholder="Filtrar por Categoría">
+            <option value="">Todas las categorías</option>
+            <option value="Clinicas">Clínicas</option>
+            <option value="Sistemas">Sistemas</option>
+            <option value="Tiendas">Tiendas</option>
+            <option value="Otra">Otra</option>
+        </select>
+        <ul id="listaClientes" class="sortable"></ul>
+    </div>
+    <div class="agregar-cliente">
+        <h2>Agregar Cliente</h2>
+        <form id="formularioCliente">
+            <input type="text" id="nombreCliente" placeholder="Nombre del Cliente" required>
+            <input type="text" id="proyectoCliente" placeholder="Proyecto del Cliente" required>
+            <select id="categoriaCliente" placeholder="Categoría del Cliente">
+                <option value="">Seleccionar Categoría</option>
                 <option value="Clinicas">Clínicas</option>
                 <option value="Sistemas">Sistemas</option>
                 <option value="Tiendas">Tiendas</option>
                 <option value="Otra">Otra</option>
             </select>
-            <ul id="listaClientes" class="sortable"></ul>
-        </div>
-        <div class="agregar-cliente">
-            <h2>Agregar Cliente</h2>
-            <form id="formularioCliente">
-                <input type="text" id="nombreCliente" placeholder="Nombre del Cliente" required>
-                <input type="text" id="proyectoCliente" placeholder="Proyecto del Cliente" required>
-                <select id="categoriaCliente" placeholder="Categoría del Cliente">
-                    <option value="">Seleccionar Categoría</option>
-                    <option value="Clinicas">Clínicas</option>
-                    <option value="Sistemas">Sistemas</option>
-                    <option value="Tiendas">Tiendas</option>
-                    <option value="Otra">Otra</option>
-                </select>
-                <textarea id="comentariosCliente" placeholder="Comentarios y notas"></textarea>
-                <input type="number" id="rentaMensual" placeholder="Renta Mensual">
-                <input type="file" id="imagenCliente" accept="image/*" placeholder="Imagen de perfil del Cliente">
-                <button type="submit">Agregar</button>
-            </form>
-        </div>
+            <textarea id="comentariosCliente" placeholder="Comentarios y notas"></textarea>
+            <input type="number" id="rentaMensual" placeholder="Renta Mensual">
+            <input type="file" id="imagenCliente" accept="image/*" placeholder="Imagen de perfil del Cliente">
+            <button type="submit">Agregar</button>
+        </form>
+    </div>
+  </div>
+        
     </main>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -106,6 +116,33 @@
             const filtroCategoria = document.getElementById('filtroCategoria');
             const formularioCliente = document.getElementById('formularioCliente');
             const clientes = obtenerClientes();
+            const loginForm = document.getElementById('login');
+            const app = document.getElementById('app');
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const loginButton = document.getElementById('loginButton');
+
+            loginButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                const username = usernameInput.value;
+                const password = passwordInput.value;
+
+                // Verificar credenciales de inicio de sesión
+                if (username === 'EDXEL' && password === 'EDXEL') {
+                    // Inicio de sesión exitoso
+                    loginForm.style.display = 'none';
+                    app.style.display = 'block';
+
+                    // Cargar clientes y otros datos del usuario desde el almacenamiento local
+                    const userData = JSON.parse(localStorage.getItem('userData')) || {};
+                    const clients = userData.clients || [];
+                    // ...
+                    // Aquí puedes cargar y gestionar los datos del usuario, como se hacía anteriormente
+
+                } else {
+                    alert('Credenciales incorrectas. Inténtalo de nuevo.');
+                }
+            });
 
             // Cargar clientes almacenados en localStorage al cargar la página
             cargarClientes();
